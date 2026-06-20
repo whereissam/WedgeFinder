@@ -5,11 +5,12 @@
   "targetUser": "students and writers",
   "goal": "Should I build this?",
   "ratings": [1, 2, 3],
-  "maxReviews": 200,
-  "maxRedditItems": 100,
+  "maxReviews": 100,
+  "maxRedditItems": 50,
   "actors": {
     "reviews": "andok/app-store-reviews",
     "reddit": "trudax/reddit-scraper-lite"
   },
-  "appStore": { "ios": "", "android": "" }
+  "country": "us",
+  "appStore": { "ios": "", "android": "notion.id" }
 }

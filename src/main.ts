@@ -6,12 +6,14 @@ import { combineSources } from "./combine.ts";
 import { assembleOpportunity } from "./score.ts";
 import { renderReport } from "./report.ts";
 import { makeClient, extractPains, judgeOpportunity } from "./analyze.ts";
+import { makeApifyClient, runReviewScraper, runRedditScraper } from "./apify.ts";
 import type { SourceResult } from "./types.ts";
 
 type Config = {
   idea: string; primaryCompetitor: string; targetUser: string; goal: string;
   ratings: number[]; maxReviews: number; maxRedditItems: number;
   actors: { reviews: string; reddit: string };
+  country: string;
   appStore: { ios: string; android: string };
 };
 
@@ -42,7 +44,7 @@ async function main() {
 
   const combined = combineSources(results);
   for (const r of results) {
-    console.log(r.ok ? `  ✓ ${r.source}: ${r.items.length} items` : `  ✗ ${r.source}: ${r.error}`);
+    console.log(r.ok ? `  ✓ ${r.source}: ${r.items?.length ?? 0} items` : `  ✗ ${r.source}: ${r.error}`);
   }
 
   const client = makeClient();
@@ -65,9 +67,21 @@ async function main() {
   console.log(`Wrote report.md`);
 }
 
-// Placeholder replaced in Task 9. Defined here so --mock works standalone.
-async function fetchLive(_cfg: Config, _wanted: string[]): Promise<SourceResult[]> {
-  throw new Error("Live fetch not wired yet — run with --mock (implemented in Task 9).");
+async function fetchLive(cfg: Config, wanted: string[]): Promise<SourceResult[]> {
+  const apify = makeApifyClient();
+  const results: SourceResult[] = [];
+  if (wanted.includes("app_review")) {
+    results.push(await runReviewScraper({
+      actorId: cfg.actors.reviews, ios: cfg.appStore.ios, android: cfg.appStore.android,
+      country: cfg.country, ratings: cfg.ratings, maxReviews: cfg.maxReviews,
+    }, apify));
+  }
+  if (wanted.includes("reddit")) {
+    results.push(await runRedditScraper({
+      actorId: cfg.actors.reddit, competitor: cfg.primaryCompetitor, maxItems: cfg.maxRedditItems,
+    }, apify));
+  }
+  return results;
 }
 
 main().catch((e) => { console.error(e); process.exit(1); });
