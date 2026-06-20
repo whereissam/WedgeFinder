@@ -9,7 +9,8 @@
   "maxRedditItems": 50,
   "maxThreadsItems": 30,
   "actors": {
-    "reviews": "andok/app-store-reviews",
+    "reviewsApple": "johnvc/apple-app-store-reviews-api",
+    "reviewsGoogle": "andok/app-store-reviews",
     "reddit": "fatihtahta/reddit-scraper-search-fast",
     "threads": "watcher.data/search-threads-by-keywords"
   },

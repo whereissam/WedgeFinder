@@ -13,7 +13,7 @@ import type { SourceResult, EvidenceItem, Opportunity, PainPoint } from "./types
 export type WfConfig = {
   idea: string; primaryCompetitor: string; targetUser: string; goal: string;
   ratings: number[]; maxReviews: number; maxRedditItems: number; maxThreadsItems: number;
-  actors: { reviews: string; reddit: string; threads: string };
+  actors: { reviewsApple: string; reviewsGoogle: string; reddit: string; threads: string };
   country: string;
   appStore: { ios: string; android: string };
 };
@@ -56,13 +56,13 @@ async function fetchLive(cfg: WfConfig, wanted: string[]): Promise<SourceResult[
     // Auto-detect the App Store id from the competitor name when not provided.
     const iosId = cfg.appStore.ios || await resolveIosAppId(cfg.primaryCompetitor, cfg.country);
     results.push(await runStoreReviews({
-      actorId: cfg.actors.reviews, appId: iosId, store: "apple", source: "ios_review",
+      actorId: cfg.actors.reviewsApple, appId: iosId, store: "apple", source: "ios_review",
       country: cfg.country, ratings: cfg.ratings, maxReviews: cfg.maxReviews,
     }, apify));
   }
   if (wanted.includes("android_review")) {
     results.push(await runStoreReviews({
-      actorId: cfg.actors.reviews, appId: cfg.appStore.android, store: "google", source: "android_review",
+      actorId: cfg.actors.reviewsGoogle, appId: cfg.appStore.android, store: "google", source: "android_review",
       country: cfg.country, ratings: cfg.ratings, maxReviews: cfg.maxReviews,
     }, apify));
   }

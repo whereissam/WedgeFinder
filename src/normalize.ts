@@ -9,11 +9,11 @@ export function normalizeReview(raw: any, source: "ios_review" | "android_review
     : Number(raw.score) || undefined;
   return {
     source,
-    text: String(raw.text ?? raw.review ?? raw.body ?? "").trim(),
+    text: String(raw.text ?? raw.review ?? raw.review_text ?? raw.body ?? "").trim(),
     rating,
     url: raw.url,
-    date: raw.date ?? raw.updated,
-    author: raw.userName ?? raw.author,
+    date: raw.date ?? raw.updated ?? raw.review_date_iso,
+    author: raw.userName ?? raw.author ?? raw.author_name,
   };
 }
 

@@ -26,15 +26,17 @@ export type StoreCfg = {
   ratings: number[]; maxReviews: number;
 };
 
-// andok/app-store-reviews takes one app per call: { appId, store, country, maxReviews }.
-// It has no rating filter, so we filter 1–3★ client-side.
+// Apple and Google use different actors with different input shapes:
+//   apple  → johnvc/apple-app-store-reviews-api: { product_ids, country, sort, max_reviews }
+//   google → andok/app-store-reviews:            { appId, store, country, maxReviews }
+// Neither has a server-side rating filter, so we filter 1–3★ client-side.
 export async function runStoreReviews(cfg: StoreCfg, client: ApifyClient): Promise<SourceResult> {
   try {
     if (!cfg.appId) throw new Error(`no appId configured for ${cfg.source}`);
-    const run = await client.actor(cfg.actorId).call(
-      { appId: cfg.appId, store: cfg.store, country: cfg.country, maxReviews: cfg.maxReviews },
-      { timeout: TIMEOUT_REVIEWS },
-    );
+    const input = cfg.store === "apple"
+      ? { product_ids: [cfg.appId], country: cfg.country, sort: "mostrecent", max_reviews: cfg.maxReviews, include_macos: false }
+      : { appId: cfg.appId, store: cfg.store, country: cfg.country, maxReviews: cfg.maxReviews };
+    const run = await client.actor(cfg.actorId).call(input, { timeout: TIMEOUT_REVIEWS });
     const { items } = await client.dataset(run.defaultDatasetId).listItems();
     const normalized = filterByRatings(items.map((r) => normalizeReview(r, cfg.source)), cfg.ratings)
       .filter((e) => e.text.length > 0)
