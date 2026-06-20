@@ -32,6 +32,7 @@ export function renderReport(input: ReportInput): string {
   const mvpFeatures = o.mvpFeatures ?? [];
   const avoid = o.avoid ?? [];
   const alternatives = o.alternatives ?? [];
+  const wedge = o.wedge.replace(/[.\s]+$/, ""); // strip trailing punctuation to avoid ".." when interpolated
   const breakdown =
     `Frequency ${s.frequency} · Severity ${s.severity} · Switching ${s.switchingIntent} · ` +
     `WTP ${s.willingnessToPay} · Inertia ${s.competitorInertia} · ` +
@@ -55,7 +56,7 @@ export function renderReport(input: ReportInput): string {
   const mvpBlock = mvpFeatures.length
     ? mvpFeatures.map((f, i) => `${i + 1}. ${f}`).join("\n") +
       (avoid.length ? `\n\n**Do not build in v1:** ${avoid.join(", ")}.` : "")
-    : `Build the narrowest product that fixes "${o.wedge}" for ${input.targetUser}.`;
+    : `Build the narrowest product that fixes "${wedge}" for ${input.targetUser}.`;
 
   const risks: string[] = [];
   if (input.unavailableSources.length) {
@@ -107,7 +108,7 @@ ${input.targetUser}
 
 ## Competitor Weakness
 
-Where ${input.competitor} is most exposed: ${o.wedge}.${alternatives.length ? `\n\nExisting alternatives already in this space: ${alternatives.join(", ")}.` : ""}
+Where ${input.competitor} is most exposed: ${wedge}.${alternatives.length ? `\n\nExisting alternatives already in this space: ${alternatives.join(", ")}.` : ""}
 
 ## MVP Recommendation
 
@@ -123,7 +124,7 @@ ${risks.map((r) => `- ${r}`).join("\n")}
 
 ## Next Validation Step
 
-Talk to 5 ${input.targetUser} who left ${input.competitor} and confirm "${o.wedge}" is why.
+Talk to 5 ${input.targetUser} who left ${input.competitor} and confirm "${wedge}" is why.
 
 ---
 Data: analyzed ${total} signals across ${sourcesBreakdown}. Estimated data-acquisition cost: ~$${input.estimatedCost.toFixed(2)} (paid scraper data only; excludes LLM, Apify compute, and platform costs).
