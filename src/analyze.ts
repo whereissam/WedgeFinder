@@ -4,7 +4,8 @@ import type { EvidenceItem, PainPoint, JudgeScores, Source } from "./types.ts";
 const MODEL = "gemini-2.5-flash";
 const clamp = (n: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, n));
 const toBool = (v: unknown) => v === true || v === "true" || v === "yes";
-const toSource = (v: unknown): Source => (v === "app_review" ? "app_review" : "reddit");
+const VALID_SOURCES: Source[] = ["ios_review", "android_review", "reddit", "threads"];
+const toSource = (v: unknown): Source => (VALID_SOURCES.includes(v as Source) ? (v as Source) : "reddit");
 
 export function parsePainsResponse(input: unknown): PainPoint[] {
   const arr = (input as any)?.pains;
@@ -41,7 +42,7 @@ const PAIN_SCHEMA = {
         type: Type.OBJECT,
         properties: {
           pain: { type: Type.STRING },
-          source: { type: Type.STRING, enum: ["app_review", "reddit"] },
+          source: { type: Type.STRING, enum: ["ios_review", "android_review", "reddit", "threads"] },
           quote: { type: Type.STRING },
           severity: { type: Type.NUMBER },
           switchingIntent: { type: Type.BOOLEAN },

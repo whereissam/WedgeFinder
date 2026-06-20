@@ -5,13 +5,13 @@ import { parsePainsResponse, parseJudgeResponse } from "../src/analyze.ts";
 test("parsePainsResponse coerces a valid tool payload", () => {
   const pains = parsePainsResponse({
     pains: [
-      { pain: "sync fails", source: "app_review", quote: "lost notes", severity: 90,
+      { pain: "sync fails", source: "ios_review", quote: "lost notes", severity: 90,
         switchingIntent: true, willingnessToPaySignal: false },
     ],
   });
   assert.equal(pains.length, 1);
   assert.equal(pains[0].severity, 90);
-  assert.equal(pains[0].source, "app_review");
+  assert.equal(pains[0].source, "ios_review");
 });
 
 test("parsePainsResponse clamps severity and defaults bad source to reddit", () => {

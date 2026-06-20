@@ -39,7 +39,7 @@ export function renderReport(input: ReportInput): string {
     ? input.usedSources.map((s) => `${sourceLabel(s)} ${input.counts[s] ?? 0}`).join(" · ")
     : "no sources";
 
-  const evidence = pains.slice(0, 8)
+  const evidence = pains.slice(0, 12)
     .map((p) => `- [${sourceLabel(p.source)}] "${p.quote}" — _${p.pain}_`)
     .join("\n") || "_No specific quotes extracted._";
 
