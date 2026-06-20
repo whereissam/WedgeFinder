@@ -2,7 +2,7 @@
 
 WedgeFinder helps a founder decide whether an idea is worth building.
 
-Give it an idea and one competitor. It buys live App Store / Google Play reviews and Reddit complaints (pay-per-use, via Apify Actors), extracts the real pain points, scores the opportunity across 7 dimensions, and writes a **decision-first report** — Build / Wait / Avoid — with a confidence score and the real user quotes behind it.
+Give it an idea and one competitor. It buys live App Store + Google Play reviews, Reddit complaints, and Threads chatter (pay-per-use, via Apify Actors), extracts the real pain points, scores the opportunity across 7 dimensions, and writes a **decision-first report** — Build / Wait / Avoid — with a confidence score and the real user quotes behind it.
 
 > It does **not** promise the "correct" decision. It reduces guessing by turning real user complaints into an evidence-backed build/no-build call.
 
@@ -19,7 +19,7 @@ Give it an idea and one competitor. It buys live App Store / Google Play reviews
 ```
 Founder idea + competitor
    → rule-based source router picks data sources
-   → pay-per-use fetch: App Store/Google Play reviews + Reddit complaints (Apify Actors)
+   → pay-per-use fetch: App Store + Google Play reviews, Reddit + Threads complaints (Apify Actors)
    → Claude extracts pain points (structured)
    → score 7 dimensions → Build Confidence Score (0–100) → Build / Wait / Avoid
    → report.md  (decision-first, with cited quotes + risks)
@@ -64,10 +64,23 @@ npm test                   # node:test, no extra tooling
 | `src/cost.ts` | pay-per-use cost estimates |
 | `src/report.ts` | decision-first Markdown report |
 | `src/analyze.ts` | Gemini pain extraction + opportunity judging |
-| `src/apify.ts` | call Apify Actors (reviews, Reddit, optional email) |
+| `src/apify.ts` | call Apify Actors (App Store + Google Play reviews, Reddit, Threads) |
 | `src/main.ts` | orchestrator (`--mock` for offline) |
 
 Design and implementation plan live in `docs/superpowers/`.
+
+## Data sources
+
+Actor IDs live in `config.json` (`actors`) — the code stays actor-agnostic, so any can be swapped. Current defaults:
+
+| Source | Actor | Why |
+|---|---|---|
+| App Store (iOS) | `johnvc/apple-app-store-reviews-api` | API-based; takes the numeric App Store id |
+| Google Play | `andok/app-store-reviews` | `store: "google"`, takes the package name |
+| Reddit | `fatihtahta/reddit-scraper-search-fast` | API-based search — avoids the 403 blocking that browser scrapers (e.g. `reddit-scraper-lite`) hit |
+| Threads | `watcher.data/search-threads-by-keywords` | keyword search over Threads |
+
+All are pay-per-event (cents-to-low-dollars per run).
 
 ## Notes
 
