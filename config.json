@@ -14,5 +14,5 @@
     "threads": "apify/threads-scraper"
   },
   "country": "us",
-  "appStore": { "ios": "1232780281", "android": "notion.id" }
+  "appStore": { "ios": "", "android": "notion.id" }
 }

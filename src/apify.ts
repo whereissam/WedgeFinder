@@ -38,6 +38,9 @@ export async function runRedditScraper(cfg: SocialCfg, client: ApifyClient): Pro
     const searches = ["slow", "offline", "alternative", "bug"].map((w) => `${cfg.competitor} ${w}`);
     const run = await client.actor(cfg.actorId).call({
       searches, searchPosts: true, searchComments: true, sort: "relevance", maxItems: cfg.maxItems,
+      // Reddit blocks datacenter IPs (403); residential proxies avoid it.
+      proxy: { useApifyProxy: true, apifyProxyGroups: ["RESIDENTIAL"] },
+      proxyConfiguration: { useApifyProxy: true, apifyProxyGroups: ["RESIDENTIAL"] },
     });
     const { items } = await client.dataset(run.defaultDatasetId).listItems();
     const normalized = items.map(normalizeRedditItem).filter((e) => e.text.length > 0).slice(0, cfg.maxItems);
@@ -52,6 +55,8 @@ export async function runThreadsScraper(cfg: SocialCfg, client: ApifyClient): Pr
     const run = await client.actor(cfg.actorId).call({
       queries: [`${cfg.competitor} slow`, `${cfg.competitor} offline`, `${cfg.competitor} alternative`],
       maxItems: cfg.maxItems,
+      proxy: { useApifyProxy: true, apifyProxyGroups: ["RESIDENTIAL"] },
+      proxyConfiguration: { useApifyProxy: true, apifyProxyGroups: ["RESIDENTIAL"] },
     });
     const { items } = await client.dataset(run.defaultDatasetId).listItems();
     const normalized = items.map(normalizeThreads).filter((e) => e.text.length > 0).slice(0, cfg.maxItems);

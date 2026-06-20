@@ -7,6 +7,7 @@ import { assembleOpportunity } from "./score.ts";
 import { renderReport } from "./report.ts";
 import { makeClient, extractPains, judgeOpportunity } from "./analyze.ts";
 import { makeApifyClient, runStoreReviews, runRedditScraper, runThreadsScraper } from "./apify.ts";
+import { resolveIosAppId } from "./resolve.ts";
 import type { SourceResult, EvidenceItem, Opportunity, PainPoint } from "./types.ts";
 
 export type WfConfig = {
@@ -52,8 +53,10 @@ async function fetchLive(cfg: WfConfig, wanted: string[]): Promise<SourceResult[
   const apify = makeApifyClient();
   const results: SourceResult[] = [];
   if (wanted.includes("ios_review")) {
+    // Auto-detect the App Store id from the competitor name when not provided.
+    const iosId = cfg.appStore.ios || await resolveIosAppId(cfg.primaryCompetitor, cfg.country);
     results.push(await runStoreReviews({
-      actorId: cfg.actors.reviews, appId: cfg.appStore.ios, store: "apple", source: "ios_review",
+      actorId: cfg.actors.reviews, appId: iosId, store: "apple", source: "ios_review",
       country: cfg.country, ratings: cfg.ratings, maxReviews: cfg.maxReviews,
     }, apify));
   }
