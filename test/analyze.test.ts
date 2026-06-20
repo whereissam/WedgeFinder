@@ -6,12 +6,20 @@ test("parsePainsResponse coerces a valid tool payload", () => {
   const pains = parsePainsResponse({
     pains: [
       { pain: "sync fails", source: "ios_review", quote: "lost notes", severity: 90,
-        switchingIntent: true, willingnessToPaySignal: false },
+        switchingIntent: true, willingnessToPaySignal: false, mentions: 23 },
     ],
   });
   assert.equal(pains.length, 1);
   assert.equal(pains[0].severity, 90);
   assert.equal(pains[0].source, "ios_review");
+  assert.equal(pains[0].mentions, 23);
+});
+
+test("parsePainsResponse defaults missing/invalid mentions to at least 1", () => {
+  const pains = parsePainsResponse({
+    pains: [{ pain: "x", source: "reddit", quote: "q", severity: 10 }],
+  });
+  assert.equal(pains[0].mentions, 1);
 });
 
 test("parsePainsResponse clamps severity and defaults bad source to reddit", () => {

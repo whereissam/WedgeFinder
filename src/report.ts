@@ -1,4 +1,5 @@
 import type { Opportunity, PainPoint, Source } from "./types.ts";
+import { WEIGHTS } from "./score.ts";
 
 export const DISCLAIMER =
   "This is a heuristic confidence score based on observed demand signals, not a prediction of startup success.";
@@ -29,6 +30,38 @@ export function diverseEvidence(pains: PainPoint[], limit: number): PainPoint[] 
     if (lane.length) out.push(lane.shift()!);
   }
   return out;
+}
+
+// Plain-language "why is the number what it is": names the dimensions contributing and
+// dragging the most (by lost weighted points), and the gap to the Build line (70).
+export function explainScore(o: Opportunity): string {
+  const s = o.scores;
+  const dims = [
+    { label: "complaint frequency", score: s.frequency, weight: WEIGHTS.frequency },
+    { label: "pain severity", score: s.severity, weight: WEIGHTS.severity },
+    { label: "switching intent", score: s.switchingIntent, weight: WEIGHTS.switchingIntent },
+    { label: "willingness to pay", score: s.willingnessToPay, weight: WEIGHTS.willingnessToPay },
+    { label: "competitor inertia", score: s.competitorInertia, weight: WEIGHTS.competitorInertia },
+    { label: "startup exploitability", score: s.startupExploitability, weight: WEIGHTS.startupExploitability },
+    { label: "evidence diversity", score: s.evidenceDiversity, weight: WEIGHTS.evidenceDiversity },
+  ];
+  const strengths = [...dims].sort((a, b) => b.score * b.weight - a.score * a.weight).slice(0, 2);
+  const drags = [...dims].sort((a, b) => (100 - b.score) * b.weight - (100 - a.score) * a.weight).slice(0, 2);
+  const fmt = (d: { label: string; score: number }) => `${d.label} (${d.score}/100)`;
+
+  const toBuild = 70 - o.confidence;
+  const gap =
+    o.decision === "Build" ? `That clears the Build line (70), so the call is **Build**.`
+    : toBuild > 0 ? `That leaves it **${toBuild} point${toBuild === 1 ? "" : "s"} below the Build line (70)**, so the call is **${o.decision}**.`
+    : `So the call is **${o.decision}**.`;
+
+  // "Loud but sticky": strong pain that users won't act on is the signal to call out.
+  const stickyWarning =
+    (s.switchingIntent < 45 || s.willingnessToPay < 35) && (s.frequency >= 70 || s.severity >= 70)
+      ? ` Users complain loudly but show little intent to switch or pay — strong pain, weak escape velocity, which is what holds the score down.`
+      : "";
+
+  return `Carried by ${strengths.map(fmt).join(" and ")}; held back by ${drags.map(fmt).join(" and ")}. ${gap}${stickyWarning}`;
 }
 
 export type ReportInput = {
@@ -63,6 +96,13 @@ export function renderReport(input: ReportInput): string {
   const evidence = diverseEvidence(pains, 12)
     .map((p) => `- [${sourceLabel(p.source)}] "${p.quote}" — _${p.pain}_`)
     .join("\n") || "_No specific quotes extracted._";
+
+  // Ranked by volume — the founder's "which problems are biggest" view.
+  const clusters = [...pains]
+    .sort((a, b) => b.mentions - a.mentions || b.severity - a.severity)
+    .slice(0, 6)
+    .map((p, i) => `${i + 1}. **${p.pain}** — ${p.mentions} mention${p.mentions === 1 ? "" : "s"} · severity ${p.severity}/100 · [${sourceLabel(p.source)}] _"${p.quote}"_`)
+    .join("\n") || "_No pain clusters extracted._";
 
   // A Build that barely clears the bar, or rests on weak pay/switch signals, is a NARROW build.
   const decisionLabel =
@@ -109,9 +149,19 @@ Breakdown: ${breakdown}
 
 > ${DISCLAIMER}
 
+## Why This Score
+
+${explainScore(o)}
+
 ## Best Wedge
 
 ${o.wedge}
+
+## Top Pain Clusters (by volume)
+
+Ranked by how many of the ${total} analyzed signals express each pain:
+
+${clusters}
 
 ## Evidence
 

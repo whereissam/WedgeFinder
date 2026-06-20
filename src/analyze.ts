@@ -17,6 +17,7 @@ export function parsePainsResponse(input: unknown): PainPoint[] {
     severity: clamp(Number(p.severity) || 0, 0, 100),
     switchingIntent: toBool(p.switchingIntent),
     willingnessToPaySignal: toBool(p.willingnessToPaySignal),
+    mentions: Math.max(1, Math.round(Number(p.mentions) || 1)),
   }));
 }
 
@@ -53,8 +54,9 @@ const PAIN_SCHEMA = {
           severity: { type: Type.NUMBER },
           switchingIntent: { type: Type.BOOLEAN },
           willingnessToPaySignal: { type: Type.BOOLEAN },
+          mentions: { type: Type.NUMBER, description: "how many of the supplied complaints express this same pain (volume)" },
         },
-        required: ["pain", "source", "quote", "severity", "switchingIntent", "willingnessToPaySignal"],
+        required: ["pain", "source", "quote", "severity", "switchingIntent", "willingnessToPaySignal", "mentions"],
       },
     },
   },
@@ -97,10 +99,11 @@ export async function extractPains(items: EvidenceItem[], client: GoogleGenAI): 
     .map((i, n) => `[${n}] (${i.source}${i.rating ? `, ${i.rating}★` : ""}) ${i.text}`)
     .join("\n");
   const prompt =
-    `Extract concrete product pain points from these user complaints. For each, give a short pain ` +
-    `label, the source, a short verbatim quote, severity 0-100 (does it block usage / cause data loss?), ` +
-    `switchingIntent (do they mention leaving/alternatives?), and willingnessToPaySignal (paid/team/` +
-    `productivity stakes?). Only real pains, no filler.\n\nComplaints:\n${corpus}`;
+    `Cluster these user complaints into distinct product pain points (merge duplicates — the same pain ` +
+    `voiced many times is ONE pain). For each, give a short pain label, the source, a short verbatim quote, ` +
+    `severity 0-100 (does it block usage / cause data loss?), switchingIntent (do they mention leaving/` +
+    `alternatives?), willingnessToPaySignal (paid/team/productivity stakes?), and mentions (how many of the ` +
+    `${items.length} supplied complaints express this same pain). Only real pains, no filler.\n\nComplaints:\n${corpus}`;
   return callModel(client, PAIN_SCHEMA, prompt, parsePainsResponse);
 }
 

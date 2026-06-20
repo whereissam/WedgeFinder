@@ -16,6 +16,7 @@ export type PainPoint = {
   severity: number;            // 0–100
   switchingIntent: boolean;
   willingnessToPaySignal: boolean;
+  mentions: number;            // how many of the analyzed signals express this pain (volume)
 };
 
 export type SignalScores = {
