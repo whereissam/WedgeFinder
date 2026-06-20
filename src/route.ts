@@ -12,18 +12,18 @@ export function detectProductType(idea: string): ProductType {
   return "unknown";
 }
 
-// MVP implements only app_review + reddit actors. Types that lack app
-// presence resolve to reddit-only; everything else gets both.
+// App-like products get the full multi-source sweep (both app stores + social);
+// non-app products skip the app stores.
 export function chooseSources(productType: ProductType): Source[] {
   switch (productType) {
     case "browser_extension":
     case "b2b_saas":
     case "dev_tool":
-      return ["reddit"];
+      return ["reddit", "threads"];
     case "mobile_app":
     case "consumer":
     case "unknown":
     default:
-      return ["app_review", "reddit"];
+      return ["ios_review", "android_review", "reddit", "threads"];
   }
 }

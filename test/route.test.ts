@@ -10,10 +10,14 @@ test("detects a browser extension", () => {
   assert.equal(detectProductType("A Chrome extension for tab management"), "browser_extension");
 });
 
-test("unknown idea falls back to dual source", () => {
-  assert.deepEqual(chooseSources("unknown"), ["app_review", "reddit"]);
+test("unknown idea falls back to the full multi-source sweep", () => {
+  assert.deepEqual(chooseSources("unknown"), ["ios_review", "android_review", "reddit", "threads"]);
 });
 
-test("mobile app uses both sources", () => {
-  assert.deepEqual(chooseSources("mobile_app"), ["app_review", "reddit"]);
+test("mobile app uses all four sources", () => {
+  assert.deepEqual(chooseSources("mobile_app"), ["ios_review", "android_review", "reddit", "threads"]);
+});
+
+test("non-app products skip the app stores", () => {
+  assert.deepEqual(chooseSources("b2b_saas"), ["reddit", "threads"]);
 });

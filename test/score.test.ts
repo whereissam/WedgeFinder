@@ -5,7 +5,7 @@ import type { PainPoint } from "../src/types.ts";
 
 const strongPains: PainPoint[] = Array.from({ length: 20 }, (_, i) => ({
   pain: "offline sync fails",
-  source: i % 2 === 0 ? "app_review" : "reddit",
+  source: i % 2 === 0 ? "ios_review" : "reddit",
   quote: "lost my notes offline",
   severity: 90,
   switchingIntent: true,
@@ -40,7 +40,7 @@ test("assembleOpportunity produces a Build for strong evidence", () => {
   });
   assert.equal(opp.decision, "Build");
   assert.ok(opp.confidence >= 70);
-  assert.deepEqual([...opp.sources].sort(), ["app_review", "reddit"]);
+  assert.deepEqual([...opp.sources].sort(), ["ios_review", "reddit"]);
   assert.equal(opp.evidenceCount, 20);
 });
 

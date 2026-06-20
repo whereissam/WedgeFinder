@@ -1,10 +1,10 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { normalizeReview, normalizeRedditItem, filterByRatings } from "../src/normalize.ts";
+import { normalizeReview, normalizeRedditItem, normalizeThreads, filterByRatings } from "../src/normalize.ts";
 
-test("normalizes a raw app review", () => {
-  const e = normalizeReview({ text: "Sync is broken", score: 1, userName: "ana", url: "u" });
-  assert.equal(e.source, "app_review");
+test("normalizes a raw app review with the given source", () => {
+  const e = normalizeReview({ text: "Sync is broken", score: 1, userName: "ana", url: "u" }, "ios_review");
+  assert.equal(e.source, "ios_review");
   assert.equal(e.text, "Sync is broken");
   assert.equal(e.rating, 1);
   assert.equal(e.author, "ana");
@@ -17,13 +17,21 @@ test("normalizes a raw reddit item", () => {
   assert.equal(e.author, "bob");
 });
 
-test("filterByRatings keeps reddit and low-star reviews, drops 5-star reviews", () => {
+test("normalizes a raw threads post", () => {
+  const e = normalizeThreads({ text: "Notion is too slow", username: "kim", url: "t" });
+  assert.equal(e.source, "threads");
+  assert.equal(e.text, "Notion is too slow");
+  assert.equal(e.author, "kim");
+});
+
+test("filterByRatings keeps non-review sources and low-star reviews, drops 5-star reviews", () => {
   const items = [
-    { source: "app_review", text: "bad", rating: 1 },
-    { source: "app_review", text: "great", rating: 5 },
+    { source: "android_review", text: "bad", rating: 1 },
+    { source: "android_review", text: "great", rating: 5 },
     { source: "reddit", text: "complaint" },
+    { source: "threads", text: "post" },
   ] as const;
   const kept = filterByRatings([...items], [1, 2, 3]);
-  assert.equal(kept.length, 2);
+  assert.equal(kept.length, 3);
   assert.ok(kept.every((i) => i.text !== "great"));
 });

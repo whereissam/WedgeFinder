@@ -1,4 +1,4 @@
-export type Source = "app_review" | "reddit";
+export type Source = "ios_review" | "android_review" | "reddit" | "threads";
 
 export type EvidenceItem = {
   source: Source;

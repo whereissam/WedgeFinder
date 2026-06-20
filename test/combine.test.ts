@@ -15,24 +15,28 @@ test("reddit cost is non-negative", () => {
 
 test("combine merges ok sources and flags failed ones", () => {
   const results: SourceResult[] = [
-    { source: "app_review", ok: true, items: [{ source: "app_review", text: "a", rating: 1 }], costEstimate: 0.2 },
+    { source: "ios_review", ok: true, items: [{ source: "ios_review", text: "a", rating: 1 }], costEstimate: 0.2 },
     { source: "reddit", ok: false, items: [], costEstimate: 0, error: "rate limited" },
   ];
   const c = combineSources(results);
-  assert.deepEqual(c.usedSources, ["app_review"]);
+  assert.deepEqual(c.usedSources, ["ios_review"]);
   assert.deepEqual(c.unavailableSources, ["reddit"]);
-  assert.equal(c.reviewCount, 1);
-  assert.equal(c.redditCount, 0);
+  assert.equal(c.counts.ios_review, 1);
+  assert.equal(c.counts.reddit ?? 0, 0);
   assert.equal(c.evidence.length, 1);
 });
 
-test("combine handles both sources ok", () => {
+test("combine handles multiple ok sources and sums cost", () => {
   const results: SourceResult[] = [
-    { source: "app_review", ok: true, items: [{ source: "app_review", text: "a", rating: 1 }], costEstimate: 0.2 },
+    { source: "ios_review", ok: true, items: [{ source: "ios_review", text: "a", rating: 1 }], costEstimate: 0.2 },
     { source: "reddit", ok: true, items: [{ source: "reddit", text: "b" }], costEstimate: 0.05 },
+    { source: "threads", ok: true, items: [{ source: "threads", text: "c" }], costEstimate: 0.0 },
   ];
   const c = combineSources(results);
-  assert.deepEqual(c.usedSources.sort(), ["app_review", "reddit"]);
+  assert.deepEqual([...c.usedSources].sort(), ["ios_review", "reddit", "threads"]);
   assert.equal(c.unavailableSources.length, 0);
+  assert.equal(c.counts.ios_review, 1);
+  assert.equal(c.counts.reddit, 1);
+  assert.equal(c.counts.threads, 1);
   assert.equal(c.totalCost, 0.25);
 });
