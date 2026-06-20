@@ -14,6 +14,23 @@ export function sourceLabel(s: string): string {
   return SOURCE_LABELS[s] ?? s;
 }
 
+// Round-robin across sources so the evidence list represents every source that produced
+// pains, not just the longest/richest ones (App Store reviews otherwise crowd out the rest).
+export function diverseEvidence(pains: PainPoint[], limit: number): PainPoint[] {
+  const queues = new Map<string, PainPoint[]>();
+  for (const p of pains) {
+    if (!queues.has(p.source)) queues.set(p.source, []);
+    queues.get(p.source)!.push(p);
+  }
+  const lanes = [...queues.values()];
+  const out: PainPoint[] = [];
+  for (let i = 0; out.length < limit && lanes.some((q) => q.length); i++) {
+    const lane = lanes[i % lanes.length];
+    if (lane.length) out.push(lane.shift()!);
+  }
+  return out;
+}
+
 export type ReportInput = {
   idea: string;
   competitor: string;
@@ -43,7 +60,7 @@ export function renderReport(input: ReportInput): string {
     ? input.usedSources.map((s) => `${sourceLabel(s)} ${input.counts[s] ?? 0}`).join(" · ")
     : "no sources";
 
-  const evidence = pains.slice(0, 12)
+  const evidence = diverseEvidence(pains, 12)
     .map((p) => `- [${sourceLabel(p.source)}] "${p.quote}" — _${p.pain}_`)
     .join("\n") || "_No specific quotes extracted._";
 
