@@ -55,7 +55,7 @@ export async function runRedditScraper(cfg: SocialCfg, client: ApifyClient): Pro
       {
         searches, searchPosts: true, searchComments: true, sort: "relevance", maxItems: cfg.maxItems,
         maxRequestRetries: 2, // don't grind through endless retries when Reddit blocks
-        proxy: RESIDENTIAL, proxyConfiguration: RESIDENTIAL,
+        proxy: RESIDENTIAL, // full trudax/reddit-scraper reads `proxy`; residential dodges most 403s
       },
       { timeout: TIMEOUT_SOCIAL },
     );

@@ -10,7 +10,7 @@
   "maxThreadsItems": 30,
   "actors": {
     "reviews": "andok/app-store-reviews",
-    "reddit": "trudax/reddit-scraper-lite",
+    "reddit": "trudax/reddit-scraper",
     "threads": "apify/threads-scraper"
   },
   "country": "us",
