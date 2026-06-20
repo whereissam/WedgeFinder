@@ -10,6 +10,7 @@ const strongPains: PainPoint[] = Array.from({ length: 20 }, (_, i) => ({
   severity: 90,
   switchingIntent: true,
   willingnessToPaySignal: true,
+  mentions: 10,
 }));
 
 test("decide thresholds", () => {
@@ -20,7 +21,7 @@ test("decide thresholds", () => {
 
 test("deriveSignalScores rewards multi-source, severe, frequent pain", () => {
   const s = deriveSignalScores(strongPains);
-  assert.equal(s.frequency, 100);          // 20 pains saturates
+  assert.equal(s.frequency, 100);          // 20 pains × 10 mentions = 200 total → saturates
   assert.equal(s.severity, 90);
   assert.equal(s.switchingIntent, 100);
   assert.equal(s.evidenceDiversity, 100);  // both sources present

@@ -46,7 +46,12 @@ export function explainScore(o: Opportunity): string {
     { label: "evidence diversity", score: s.evidenceDiversity, weight: WEIGHTS.evidenceDiversity },
   ];
   const strengths = [...dims].sort((a, b) => b.score * b.weight - a.score * a.weight).slice(0, 2);
-  const drags = [...dims].sort((a, b) => (100 - b.score) * b.weight - (100 - a.score) * a.weight).slice(0, 2);
+  const named = new Set(strengths.map((d) => d.label));
+  // Exclude the strengths so a high-weight dimension can't be both "carried by" and "held back by".
+  const drags = [...dims]
+    .filter((d) => !named.has(d.label))
+    .sort((a, b) => (100 - b.score) * b.weight - (100 - a.score) * a.weight)
+    .slice(0, 2);
   const fmt = (d: { label: string; score: number }) => `${d.label} (${d.score}/100)`;
 
   const toBuild = 70 - o.confidence;

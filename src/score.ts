@@ -20,8 +20,11 @@ export function deriveSignalScores(pains: PainPoint[]): SignalScores {
     return { frequency: 0, severity: 0, switchingIntent: 0, willingnessToPay: 0, evidenceDiversity: 0 };
   }
   const distinctSources = new Set(pains.map((p) => p.source)).size;
+  // Frequency reflects real complaint VOLUME, not the number of distinct pains: a pain voiced
+  // 40 times should outweigh one voiced once. Sum the per-pain mention counts; 100+ saturates.
+  const totalMentions = pains.reduce((sum, p) => sum + Math.max(1, p.mentions || 1), 0);
   return {
-    frequency: Math.min(100, pains.length * 5),        // 20 pains saturates
+    frequency: Math.min(100, totalMentions),
     severity: Math.round(avg(pains.map((p) => p.severity))),
     switchingIntent: Math.round(pct(pains, (p) => p.switchingIntent)),
     willingnessToPay: Math.round(pct(pains, (p) => p.willingnessToPaySignal)),

@@ -14,7 +14,7 @@ const opp: Opportunity = {
 };
 const pains: PainPoint[] = [{
   pain: "offline sync fails", source: "ios_review", quote: "I lost my notes offline",
-  severity: 90, switchingIntent: true, willingnessToPaySignal: false,
+  severity: 90, switchingIntent: true, willingnessToPaySignal: false, mentions: 12,
 }];
 
 test("report leads with decision and confidence", () => {
