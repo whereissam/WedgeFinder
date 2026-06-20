@@ -1,86 +1,83 @@
-# Teach your agents to scrape real-time data
+# WedgeFinder
 
-A hands-on workshop. Connect your AI agent to live web data using the Model Context Protocol (MCP) and Apify Agent Skills, then build your own scraper when nothing off-the-shelf fits.
+WedgeFinder helps a founder decide whether an idea is worth building.
 
-**Author:** Kevin Lewis ([@phazonoverload](https://github.com/phazonoverload)), Apify
+Give it an idea and one competitor. It buys live App Store / Google Play reviews and Reddit complaints (pay-per-use, via Apify Actors), extracts the real pain points, scores the opportunity across 7 dimensions, and writes a **decision-first report** — Build / Wait / Avoid — with a confidence score and the real user quotes behind it.
 
-## Why this workshop exists
+> It does **not** promise the "correct" decision. It reduces guessing by turning real user complaints into an evidence-backed build/no-build call.
 
-AI agents can write code and reason, but they can't access the live web on their own. This workshop teaches you how to bridge that gap using MCP and Apify's platform. By the end, your agent will be able to scrape websites, pull real-time data, and build custom scrapers on command.
+## What makes it useful
 
-## Who this is for
+- **A decision, not a dashboard.** The report leads with Build / Wait / Avoid and a 0–100 confidence score — not charts you have to interpret.
+- **Pay-per-use.** It buys only the data it needs for one question (cents-to-low-dollars), instead of a monthly subscription.
+- **The agent picks the sources.** It chooses which data to buy based on the product type.
+- **Evidence you can check.** Every conclusion cites real user quotes and says where the evidence is thin.
+- **Resilient.** Any single data source can fail and the report still ships from the rest.
 
-This workshop works for non-coders and developers alike.
+## How it works
 
-- **Non-coders** can run Actors, export data, chain them together, and connect them to an AI assistant -- no terminal needed.
-- **Developers** can do all of that plus install CLI tools and Agent Skills to build and publish custom Actors.
+```
+Founder idea + competitor
+   → rule-based source router picks data sources
+   → pay-per-use fetch: App Store/Google Play reviews + Reddit complaints (Apify Actors)
+   → Claude extracts pain points (structured)
+   → score 7 dimensions → Build Confidence Score (0–100) → Build / Wait / Avoid
+   → report.md  (decision-first, with cited quotes + risks)
+```
 
-No prior experience with web scraping, MCP, or Apify is required.
+**The 7 scoring dimensions:** Pain Frequency · Pain Severity · Switching Intent · Willingness to Pay · Competitor Inertia · Startup Exploitability · Evidence Diversity.
 
-## Prerequisites
+The confidence score is a transparent heuristic — every report shows the per-dimension breakdown and states plainly that it is *a guide to reduce guessing, not a prediction of startup success*.
 
-**Everyone:**
+## Setup
 
-- An Apify account (free, you'll create it in Lesson 1)
+Requires **Node.js ≥ 22.6** (uses native TypeScript type-stripping — no build step).
 
-**For lessons 4-6 (developer track):**
+```bash
+cp .env.example .env       # add APIFY_TOKEN + ANTHROPIC_API_KEY
+npm install
+```
 
-- An AI coding tool installed: Claude Code, Cursor, Codex, or similar
-- Node.js (v18+), download at [nodejs.org](https://nodejs.org)
+## Run
 
-> **Note for self-hosted workshops:** If you're running this at your own event, you may want to provide promo codes for free Apify credits. Contact Apify for event-specific codes, and have instructors available to help people who get stuck.
+```bash
+npm run start:mock         # offline: runs the full report flow on bundled mock data
+npm start                  # live: pays per-use for real review + Reddit data
+```
 
-## Session structure
+Edit `config.json` to change the idea, competitor, and App Store URLs.
 
-This works as a self-paced station or as an instructor-led session.
+## Test
 
-1. **Opening talk** (~15 min) -- introduces Apify, MCP, and Agent Skills
-2. **Self-paced lessons** (~70 min) -- work through the lessons at your own speed
-3. **Wrap-up** (~5 min) -- recap and next steps
+```bash
+npm test                   # node:test, no extra tooling
+```
 
-Everyone starts at lesson 1. If you don't write code, lessons 1-3 are for you. If you build software, continue through lesson 6.
+## Project layout
 
-## Lessons
+| File | Responsibility |
+|---|---|
+| `src/route.ts` | rule-based source router (product type → which sources to buy) |
+| `src/normalize.ts` | raw actor JSON → normalized evidence |
+| `src/score.ts` | pure 7-dimension scoring → confidence + Build/Wait/Avoid |
+| `src/combine.ts` | merge sources with graceful degradation |
+| `src/cost.ts` | pay-per-use cost estimates |
+| `src/report.ts` | decision-first Markdown report |
+| `src/analyze.ts` | Claude pain extraction + opportunity judging |
+| `src/apify.ts` | call Apify Actors (reviews, Reddit, optional email) |
+| `src/main.ts` | orchestrator (`--mock` for offline) |
 
-| # | Lesson | Time | 
-| --- | --- | --- |
-| 1 | [Run Your First Actor](./lesson-1-first-actor.md) | 10 min |
-| 2 | [What to Do With Your Data](./lesson-2-what-to-do-with-your-data.md) | 15 min |
-| 3 | [Connect Your Agent with MCP](./lesson-3-mcp.md) | 15 min |
-| 4 | [Install and Use the Apify CLI](./lesson-4-apify-cli.md) | 10 min |
-| 5 | [Install Agent Skills](./lesson-5-agent-skills.md) | 10 min |
-| 6 | [Build and Publish Your Own Actor](./lesson-6-build-your-own.md) | 20 min |
+Design and implementation plan live in `docs/superpowers/`.
 
-### Not sure what to do?
+## Notes
 
-- **Everyone:** start at lesson 1 and go in order.
-- **Non-coder:** you can stop after lesson 3. Browse [recipes.md](./recipes.md) for ready-to-use prompts that work with your connected assistant.
-- **Developer:** complete all six lessons. The [recipes](./recipes.md) are useful at any point for inspiration.
+- Any single data source can fail; the report still ships from the rest (graceful degradation).
+- Apify actor IDs live in `config.json` — the code stays actor-agnostic.
+- Email delivery is optional and never on the critical path.
 
-## Stuck?
+---
 
-If you're at an event, raise your hand or flag down an instructor.
-
-If you're working through this on your own, open an issue on this repo and we'll help.
-
-## After the workshop
-
-The [Apify Store](https://apify.com/store) has thousands of ready-made Actors you can call through MCP or the CLI. A few highlights:
-
-| Platform | What you can get |
-| --- | --- |
-| Google Maps | Business listings, reviews, contact info |
-| Booking.com | Hotel prices, availability, ratings |
-| YouTube | Video metadata, comments, channel info |
-| LinkedIn | Company and job data |
-| Amazon | Product details, reviews, prices |
-
-## Further reading
-
-- [Model Context Protocol Documentation](https://modelcontextprotocol.io)
-- [Apify MCP Server](https://mcp.apify.com)
-- [Apify Documentation](https://docs.apify.com)
-- [Agent Skills Repository](https://github.com/apify/agent-skills)
+*Started from the [Apify agents-data-workshop](https://github.com/apify/agents-data-workshop) (MIT). WedgeFinder is an independent project built on top of it.*
 
 ## License
 
