@@ -5,6 +5,13 @@ import { runPipeline, type WfConfig } from "./pipeline.ts";
 await Actor.init();
 
 const input = ((await Actor.getInput()) ?? {}) as Record<string, any>;
+
+// Allow the Gemini key to come from the input form (falls back to the env var).
+if (input.geminiApiKey) process.env.GEMINI_API_KEY = String(input.geminiApiKey);
+if (!process.env.GEMINI_API_KEY) {
+  throw new Error("No Gemini API key. Set the 'Gemini API key' input or a GEMINI_API_KEY environment variable on the Actor.");
+}
+
 const defaults: WfConfig = JSON.parse(await readFile(new URL("../config.json", import.meta.url), "utf8"));
 
 const cfg: WfConfig = {
