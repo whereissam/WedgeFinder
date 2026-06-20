@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WedgeFinder — Evidence-backed conviction for founders</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ===========================================
+   VIEWPORT FITTING: MANDATORY BASE STYLES
+   =========================================== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body { height: 100%; overflow-x: hidden; }
+html { scroll-snap-type: y mandatory; scroll-behavior: smooth; }
+
+.slide {
+    width: 100vw; height: 100vh; height: 100dvh;
+    overflow: hidden; scroll-snap-align: start;
+    display: flex; flex-direction: column; position: relative;
+}
+.slide-content {
+    flex: 1; display: flex; flex-direction: column; justify-content: center;
+    max-height: 100%; overflow: hidden; padding: var(--slide-padding);
+}
+
+:root {
+    --title-size: clamp(1.5rem, 5vw, 4rem);
+    --h2-size: clamp(1.25rem, 3.5vw, 2.5rem);
+    --h3-size: clamp(1rem, 2.5vw, 1.75rem);
+    --body-size: clamp(0.75rem, 1.5vw, 1.125rem);
+    --small-size: clamp(0.65rem, 1vw, 0.875rem);
+
+    --slide-padding: clamp(1rem, 4vw, 4rem);
+    --content-gap: clamp(0.5rem, 2vw, 2rem);
+    --element-gap: clamp(0.25rem, 1vw, 1rem);
+
+    /* Swiss Modern theme */
+    --ink: #0a0a0a;
+    --paper: #f4f4f1;
+    --red: #e2231a;
+    --muted: #6b6b6b;
+    --line: rgba(10,10,10,0.16);
+}
+
+body { background: var(--paper); color: var(--ink); font-family: 'Nunito', sans-serif; }
+
+h1, h2, h3, .mono-label, .num { font-family: 'Archivo', sans-serif; }
+
+/* Visible grid overlay — Swiss signature */
+.grid-overlay {
+    position: absolute; inset: 0; pointer-events: none; z-index: 0;
+    background-image:
+        linear-gradient(var(--line) 1px, transparent 1px),
+        linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    background-size: clamp(48px, 8vw, 96px) clamp(48px, 8vw, 96px);
+    opacity: 0.5;
+}
+.slide-content { position: relative; z-index: 1; }
+
+/* Top meta bar */
+.meta-bar {
+    position: absolute; top: 0; left: 0; right: 0; z-index: 2;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: clamp(0.6rem, 2vw, 1.4rem) var(--slide-padding);
+    font-family: 'Archivo'; font-weight: 700; letter-spacing: 0.12em;
+    font-size: var(--small-size); text-transform: uppercase;
+}
+.meta-bar .red { color: var(--red); }
+
+/* Slide index */
+.slide-index {
+    position: absolute; bottom: clamp(0.6rem, 2vw, 1.4rem);
+    right: var(--slide-padding); z-index: 2;
+    font-family: 'Archivo'; font-weight: 800; font-size: var(--small-size);
+    color: var(--muted);
+}
+.slide-index .cur { color: var(--red); }
+
+.mono-label {
+    font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase;
+    font-size: var(--small-size); color: var(--red);
+    display: inline-flex; align-items: center; gap: 0.6em;
+}
+.mono-label::before {
+    content: ""; width: clamp(20px, 3vw, 44px); height: 2px; background: var(--red);
+}
+
+h1 { font-weight: 900; font-size: var(--title-size); line-height: 0.98; letter-spacing: -0.02em; }
+h2 { font-weight: 800; font-size: var(--h2-size); line-height: 1.04; letter-spacing: -0.01em; }
+.lead { font-size: var(--body-size); color: var(--muted); max-width: 60ch; line-height: 1.55; }
+
+.rule { height: 3px; background: var(--ink); width: clamp(60px, 12vw, 180px); }
+.rule.red { background: var(--red); }
+
+/* Reveal animation */
+.reveal { opacity: 0; transform: translateY(18px); transition: opacity .6s cubic-bezier(.2,.7,.2,1), transform .6s cubic-bezier(.2,.7,.2,1); }
+.slide.active .reveal { opacity: 1; transform: none; }
+.slide.active .reveal.d1 { transition-delay: .08s; }
+.slide.active .reveal.d2 { transition-delay: .16s; }
+.slide.active .reveal.d3 { transition-delay: .24s; }
+.slide.active .reveal.d4 { transition-delay: .32s; }
+.slide.active .reveal.d5 { transition-delay: .40s; }
+
+/* ---------- Slide 1: Title ---------- */
+.title-slide .slide-content { gap: var(--content-gap); }
+.title-mark { display: flex; align-items: baseline; gap: clamp(0.4rem,1.5vw,1rem); }
+.title-mark .big { font-size: clamp(2.4rem, 9vw, 7rem); font-weight: 900; letter-spacing: -0.04em; line-height: 0.9; }
+.title-mark .dot { width: clamp(14px,2.4vw,26px); height: clamp(14px,2.4vw,26px); background: var(--red); border-radius: 50%; align-self: center; }
+.title-tag { font-family: 'Archivo'; font-weight: 700; font-size: var(--h3-size); max-width: 22ch; line-height: 1.15; }
+.title-tag em { color: var(--red); font-style: normal; }
+
+/* ---------- Generic data grid ---------- */
+.grid {
+    display: grid; gap: clamp(0.5rem, 1.5vw, 1.1rem);
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+}
+.cell {
+    border: 2px solid var(--ink); background: var(--paper);
+    padding: clamp(0.8rem, 2vw, 1.5rem);
+    display: flex; flex-direction: column; gap: 0.4em;
+}
+.cell .k { font-family:'Archivo'; font-weight:800; font-size: clamp(1.6rem,4vw,2.6rem); line-height:1; }
+.cell .k.red { color: var(--red); }
+.cell .t { font-family:'Archivo'; font-weight:700; font-size: var(--body-size); }
+.cell .s { font-size: var(--small-size); color: var(--muted); line-height:1.4; }
+
+/* Pipeline steps */
+.pipe { display: grid; gap: clamp(0.5rem,1.4vw,1rem); grid-template-columns: repeat(auto-fit, minmax(min(100%,200px),1fr)); }
+.step { border-top: 3px solid var(--ink); padding-top: 0.7em; display:flex; flex-direction:column; gap:0.35em; }
+.step:nth-child(4) { border-top-color: var(--red); }
+.step .n { font-family:'Archivo'; font-weight:900; color: var(--red); font-size: var(--body-size); }
+.step .h { font-family:'Archivo'; font-weight:800; font-size: var(--h3-size); line-height:1.05; }
+.step .d { font-size: var(--small-size); color: var(--muted); line-height:1.4; }
+
+/* Score slide */
+.score-wrap { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1.1fr); gap: clamp(1rem,3vw,3rem); align-items: center; }
+@media (max-width: 760px){ .score-wrap{ grid-template-columns:1fr; } }
+.score-big { font-family:'Archivo'; font-weight:900; font-size: clamp(4rem,16vw,11rem); line-height:0.82; letter-spacing:-0.04em; }
+.score-big sub { color: var(--muted); font-size: 0.22em; font-weight:700; vertical-align: super; letter-spacing:0; }
+.verdict-row { display:flex; gap:0.5rem; flex-wrap:wrap; margin-top: var(--element-gap); }
+.tag { font-family:'Archivo'; font-weight:800; font-size: var(--small-size); letter-spacing:0.06em; padding:0.4em 0.9em; border:2px solid var(--ink); text-transform:uppercase; }
+.tag.on { background: var(--red); color:#fff; border-color: var(--red); }
+.bars { display:flex; flex-direction:column; gap: clamp(0.35rem,1.1vh,0.7rem); }
+.bar { display:grid; grid-template-columns: 13ch 1fr 3ch; align-items:center; gap:0.7rem; font-size: var(--small-size); }
+.bar .label { font-family:'Archivo'; font-weight:700; }
+.bar .track { height: clamp(8px,1.4vh,12px); background: rgba(10,10,10,0.08); position:relative; }
+.bar .fill { position:absolute; inset:0 auto 0 0; background: var(--ink); width: 0; transition: width .9s cubic-bezier(.2,.7,.2,1); }
+.bar .fill.red { background: var(--red); }
+.slide.active .bar .fill { width: var(--w); }
+.bar .pct { font-family:'Archivo'; font-weight:800; text-align:right; }
+
+/* Closing */
+.close-quote { font-family:'Archivo'; font-weight:800; font-size: var(--h2-size); line-height:1.12; max-width: 22ch; }
+.close-quote .red { color: var(--red); }
+.ask-grid { display:grid; gap: clamp(0.5rem,1.4vw,1rem); grid-template-columns: repeat(auto-fit,minmax(min(100%,180px),1fr)); }
+
+.keyboard-hint {
+    position: absolute; bottom: clamp(0.6rem,2vw,1.4rem); left: var(--slide-padding); z-index:2;
+    font-size: var(--small-size); color: var(--muted); font-family:'Archivo'; font-weight:600; letter-spacing:0.05em;
+}
+
+/* progress */
+.progress { position: fixed; top:0; left:0; height:4px; background: var(--red); z-index: 50; width:0; transition: width .25s ease; }
+
+/* ---------- short-height breakpoints ---------- */
+@media (max-height: 700px){ :root{ --slide-padding: clamp(0.75rem,3vw,2rem); --content-gap: clamp(0.4rem,1.5vw,1rem); --title-size: clamp(1.25rem,4.5vw,2.5rem); --h2-size: clamp(1rem,3vw,1.75rem); } }
+@media (max-height: 600px){ :root{ --slide-padding: clamp(0.5rem,2.5vw,1.5rem); --body-size: clamp(0.7rem,1.2vw,0.95rem); } .keyboard-hint, .grid-overlay{ display:none; } }
+@media (max-height: 500px){ :root{ --slide-padding: clamp(0.4rem,2vw,1rem); --title-size: clamp(1rem,3.5vw,1.5rem); } }
+@media (max-width: 600px){ :root{ --title-size: clamp(1.25rem,7vw,2.5rem); } .grid{ grid-template-columns:1fr; } }
+
+@media (prefers-reduced-motion: reduce){
+    *, *::before, *::after { animation-duration:.01ms !important; transition-duration:.2s !important; }
+    html{ scroll-behavior:auto; }
+    .reveal{ opacity:1; transform:none; }
+}
+</style>
+</head>
+<body>
+<div class="progress" id="progress"></div>
+<main>
+
+<!-- ===== SLIDE 1 — TITLE ===== -->
+<section class="slide title-slide active" id="s1">
+    <div class="grid-overlay"></div>
+    <div class="meta-bar"><span>WedgeFinder</span><span class="red">Apify × AI Agents · 2026</span></div>
+    <div class="slide-content">
+        <span class="mono-label reveal d1">Founder idea-validation agent</span>
+        <div class="title-mark reveal d2">
+            <span class="big">WedgeFinder</span><span class="dot"></span>
+        </div>
+        <div class="rule red reveal d2"></div>
+        <p class="title-tag reveal d3">An agent that buys <em>live customer evidence</em> and turns it into a build-or-not decision.</p>
+        <p class="lead reveal d4">IdeaBrowser gives founders ideas. WedgeFinder gives them evidence-backed conviction — before they write a line of code.</p>
+    </div>
+    <div class="slide-index"><span class="cur">01</span> / 05</div>
+    <div class="keyboard-hint">↓ / → · space · swipe to advance</div>
+</section>
+
+<!-- ===== SLIDE 2 — ORIGIN STORY ===== -->
+<section class="slide" id="s2">
+    <div class="grid-overlay"></div>
+    <div class="meta-bar"><span>Why This Exists</span><span class="red">02</span></div>
+    <div class="slide-content" style="gap:var(--content-gap)">
+        <span class="mono-label reveal d1">It started with a coffee chat</span>
+        <h2 class="reveal d1">I met a founder, tried his app —<br>and hit <span style="color:var(--red)">problem after problem.</span></h2>
+        <p class="lead reveal d2">Early-stage, tiny team, no bandwidth to gather feedback at scale. My advice over coffee: the market is already telling you what's broken — it's in the app reviews, the Reddit threads, the replies on Threads. You just have to listen.</p>
+        <div class="grid reveal d3">
+            <div class="cell"><span class="k red">Listen</span><span class="t">Fix your own product</span><span class="s">Mine what real users complain about and patch the weak spots fast.</span></div>
+            <div class="cell"><span class="k">Outflank</span><span class="t">Beat the competitor</span><span class="s">Read a rival's reviews to find their gaps — and build your edge right there.</span></div>
+            <div class="cell"><span class="k">Automate</span><span class="t">Hours by hand → minutes</span><span class="s">Even Boris Cherny — who runs Claude Code — patrols Threads himself for feedback. That eats hours. The agent does it in minutes.</span></div>
+        </div>
+    </div>
+    <div class="slide-index"><span class="cur">02</span> / 05</div>
+</section>
+
+<!-- ===== SLIDE 3 — SOLUTION / PIPELINE ===== -->
+<section class="slide" id="s3">
+    <div class="grid-overlay"></div>
+    <div class="meta-bar"><span>How It Works</span><span class="red">03</span></div>
+    <div class="slide-content" style="gap:var(--content-gap)">
+        <span class="mono-label reveal d1">Idea + 1 competitor → decision</span>
+        <h2 class="reveal d1">The agent <span style="color:var(--red)">pays per-use</span> for live web data, then reasons over it.</h2>
+        <div class="pipe reveal d2">
+            <div class="step"><span class="n">01</span><span class="h">Buy evidence</span><span class="d">Apify Actors pull live App Store / Play reviews + Reddit complaints — cents to a few dollars.</span></div>
+            <div class="step"><span class="n">02</span><span class="h">Extract pains</span><span class="d">An LLM reads every review and surfaces recurring, ranked pain points with quotes.</span></div>
+            <div class="step"><span class="n">03</span><span class="h">Score 7 dims</span><span class="d">A pure, auditable <code>score.ts</code> rates demand, gap, intensity & more.</span></div>
+            <div class="step"><span class="n">04</span><span class="h">Decide</span><span class="d">A decision-first <code>report.md</code> with a Build Confidence Score and the receipts.</span></div>
+        </div>
+        <p class="lead reveal d3">Any source can fail and the report still ships — graceful degradation, dual-source by default.</p>
+    </div>
+    <div class="slide-index"><span class="cur">03</span> / 05</div>
+</section>
+
+<!-- ===== SLIDE 4 — THE OUTPUT / SCORE ===== -->
+<section class="slide" id="s4">
+    <div class="grid-overlay"></div>
+    <div class="meta-bar"><span>The Output</span><span class="red">04</span></div>
+    <div class="slide-content" style="gap:var(--content-gap)">
+        <span class="mono-label reveal d1">Build Confidence Score · 0–100</span>
+        <div class="score-wrap">
+            <div class="reveal d2">
+                <div class="score-big">78<sub>/100</sub></div>
+                <div class="verdict-row">
+                    <span class="tag on">Build</span>
+                    <span class="tag">Wait</span>
+                    <span class="tag">Avoid</span>
+                </div>
+                <p class="lead" style="margin-top:var(--element-gap)">Every score ships with a per-dimension breakdown and an honest heuristic disclaimer — it reduces guessing, it doesn't promise success.</p>
+            </div>
+            <div class="bars reveal d3">
+                <div class="bar"><span class="label">Frequency</span><span class="track"><span class="fill" style="--w:90%"></span></span><span class="pct">90</span></div>
+                <div class="bar"><span class="label">Severity</span><span class="track"><span class="fill" style="--w:80%"></span></span><span class="pct">80</span></div>
+                <div class="bar"><span class="label">Switch intent</span><span class="track"><span class="fill" style="--w:72%"></span></span><span class="pct">72</span></div>
+                <div class="bar"><span class="label">Willing to pay</span><span class="track"><span class="fill" style="--w:65%"></span></span><span class="pct">65</span></div>
+                <div class="bar"><span class="label">Comp. inertia</span><span class="track"><span class="fill" style="--w:69%"></span></span><span class="pct">69</span></div>
+                <div class="bar"><span class="label">Exploitability</span><span class="track"><span class="fill" style="--w:72%"></span></span><span class="pct">72</span></div>
+                <div class="bar"><span class="label">Evidence div.</span><span class="track"><span class="fill red" style="--w:100%"></span></span><span class="pct">100</span></div>
+            </div>
+        </div>
+    </div>
+    <div class="slide-index"><span class="cur">04</span> / 05</div>
+</section>
+
+<!-- ===== SLIDE 5 — WHY NOW / CLOSE ===== -->
+<section class="slide" id="s5">
+    <div class="grid-overlay"></div>
+    <div class="meta-bar"><span>Why Now</span><span class="red">05</span></div>
+    <div class="slide-content" style="gap:var(--content-gap)">
+        <span class="mono-label reveal d1">The agentic shift</span>
+        <p class="close-quote reveal d1">An agent that <span class="red">autonomously pays</span> for web data and returns a business decision — that's the whole thesis.</p>
+        <div class="ask-grid reveal d2">
+            <div class="cell"><span class="k red">¢–$</span><span class="t">Per validation</span><span class="s">Pay-per-use data, not a monthly subscription.</span></div>
+            <div class="cell"><span class="k">Min</span><span class="t">Time to answer</span><span class="s">Idea in, evidence-backed verdict out, in minutes.</span></div>
+            <div class="cell"><span class="k">2+</span><span class="t">Live sources</span><span class="s">Reviews + Reddit today; more Actors next.</span></div>
+        </div>
+        <div class="rule red reveal d3"></div>
+        <p class="lead reveal d3"><strong>WedgeFinder</strong> — find the wedge before you build the product.</p>
+    </div>
+    <div class="slide-index"><span class="cur">05</span> / 05</div>
+</section>
+
+</main>
+
+<script>
+/* Presentation controller: keyboard, wheel, touch, progress, active-slide reveal */
+class Deck {
+    constructor() {
+        this.slides = Array.from(document.querySelectorAll('.slide'));
+        this.i = 0;
+        this.locked = false;
+        this.progress = document.getElementById('progress');
+        this.bindKeys();
+        this.bindWheel();
+        this.bindTouch();
+        this.observe();
+        this.update();
+    }
+    go(n) {
+        const next = Math.max(0, Math.min(this.slides.length - 1, n));
+        if (next === this.i) return;
+        this.i = next;
+        this.slides[this.i].scrollIntoView({ behavior: 'smooth' });
+        this.update();
+    }
+    update() {
+        this.slides.forEach((s, idx) => s.classList.toggle('active', idx === this.i));
+        this.progress.style.width = ((this.i + 1) / this.slides.length * 100) + '%';
+    }
+    bindKeys() {
+        window.addEventListener('keydown', (e) => {
+            if (['ArrowDown','ArrowRight',' ','PageDown'].includes(e.key)) { e.preventDefault(); this.go(this.i + 1); }
+            else if (['ArrowUp','ArrowLeft','PageUp'].includes(e.key)) { e.preventDefault(); this.go(this.i - 1); }
+            else if (e.key === 'Home') { e.preventDefault(); this.go(0); }
+            else if (e.key === 'End') { e.preventDefault(); this.go(this.slides.length - 1); }
+        });
+    }
+    bindWheel() {
+        window.addEventListener('wheel', (e) => {
+            if (this.locked) return;
+            if (Math.abs(e.deltaY) < 24) return;
+            this.locked = true;
+            this.go(this.i + (e.deltaY > 0 ? 1 : -1));
+            setTimeout(() => this.locked = false, 720);
+        }, { passive: true });
+    }
+    bindTouch() {
+        let y0 = null;
+        window.addEventListener('touchstart', (e) => { y0 = e.touches[0].clientY; }, { passive: true });
+        window.addEventListener('touchend', (e) => {
+            if (y0 === null) return;
+            const dy = y0 - e.changedTouches[0].clientY;
+            if (Math.abs(dy) > 50) this.go(this.i + (dy > 0 ? 1 : -1));
+            y0 = null;
+        }, { passive: true });
+    }
+    observe() {
+        // Keep active index in sync if user scrolls/snaps manually
+        const io = new IntersectionObserver((entries) => {
+            entries.forEach((en) => {
+                if (en.isIntersecting && en.intersectionRatio > 0.6) {
+                    this.i = this.slides.indexOf(en.target);
+                    this.update();
+                }
+            });
+        }, { threshold: [0.6] });
+        this.slides.forEach((s) => io.observe(s));
+    }
+}
+document.addEventListener('DOMContentLoaded', () => new Deck());
+</script>
+</body>
+</html>
