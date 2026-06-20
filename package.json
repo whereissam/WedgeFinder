@@ -9,7 +9,7 @@
     "start:mock": "node --experimental-strip-types --env-file=.env src/main.ts --mock"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.39.0",
+    "@google/genai": "^1.52.0",
     "apify-client": "^2.11.0"
   }
 }

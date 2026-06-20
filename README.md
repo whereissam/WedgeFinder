@@ -34,7 +34,7 @@ The confidence score is a transparent heuristic — every report shows the per-d
 Requires **Node.js ≥ 22.6** (uses native TypeScript type-stripping — no build step).
 
 ```bash
-cp .env.example .env       # add APIFY_TOKEN + ANTHROPIC_API_KEY
+cp .env.example .env       # add APIFY_TOKEN + GEMINI_API_KEY
 npm install
 ```
 
@@ -63,7 +63,7 @@ npm test                   # node:test, no extra tooling
 | `src/combine.ts` | merge sources with graceful degradation |
 | `src/cost.ts` | pay-per-use cost estimates |
 | `src/report.ts` | decision-first Markdown report |
-| `src/analyze.ts` | Claude pain extraction + opportunity judging |
+| `src/analyze.ts` | Gemini pain extraction + opportunity judging |
 | `src/apify.ts` | call Apify Actors (reviews, Reddit, optional email) |
 | `src/main.ts` | orchestrator (`--mock` for offline) |
 

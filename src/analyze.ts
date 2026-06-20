@@ -1,7 +1,7 @@
-import Anthropic from "@anthropic-ai/sdk";
+import { GoogleGenAI, Type } from "@google/genai";
 import type { EvidenceItem, PainPoint, JudgeScores, Source } from "./types.ts";
 
-const MODEL = "claude-haiku-4-5";
+const MODEL = "gemini-2.5-flash";
 const clamp = (n: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, n));
 const toBool = (v: unknown) => v === true || v === "true" || v === "yes";
 const toSource = (v: unknown): Source => (v === "app_review" ? "app_review" : "reddit");
@@ -28,65 +28,53 @@ export function parseJudgeResponse(input: unknown): JudgeScores {
   };
 }
 
-export function makeClient(): Anthropic {
-  return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+export function makeClient(): GoogleGenAI {
+  return new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 }
 
-const PAIN_TOOL: Anthropic.Tool = {
-  name: "report_pains",
-  description: "Return pain points extracted from user complaints.",
-  input_schema: {
-    type: "object",
-    properties: {
-      pains: {
-        type: "array",
-        items: {
-          type: "object",
-          properties: {
-            pain: { type: "string" },
-            source: { type: "string", enum: ["app_review", "reddit"] },
-            quote: { type: "string" },
-            severity: { type: "number" },
-            switchingIntent: { type: "boolean" },
-            willingnessToPaySignal: { type: "boolean" },
-          },
-          required: ["pain", "source", "quote", "severity", "switchingIntent", "willingnessToPaySignal"],
+const PAIN_SCHEMA = {
+  type: Type.OBJECT,
+  properties: {
+    pains: {
+      type: Type.ARRAY,
+      items: {
+        type: Type.OBJECT,
+        properties: {
+          pain: { type: Type.STRING },
+          source: { type: Type.STRING, enum: ["app_review", "reddit"] },
+          quote: { type: Type.STRING },
+          severity: { type: Type.NUMBER },
+          switchingIntent: { type: Type.BOOLEAN },
+          willingnessToPaySignal: { type: Type.BOOLEAN },
         },
+        required: ["pain", "source", "quote", "severity", "switchingIntent", "willingnessToPaySignal"],
       },
     },
-    required: ["pains"],
   },
+  required: ["pains"],
 };
 
-const JUDGE_TOOL: Anthropic.Tool = {
-  name: "judge_opportunity",
-  description: "Judge the best competitor wedge and two hard-to-derive scores.",
-  input_schema: {
-    type: "object",
-    properties: {
-      wedge: { type: "string" },
-      competitorInertia: { type: "number", description: "0-100, how hard for incumbent to fix" },
-      startupExploitability: { type: "number", description: "0-100, how exploitable by a small team" },
-    },
-    required: ["wedge", "competitorInertia", "startupExploitability"],
+const JUDGE_SCHEMA = {
+  type: Type.OBJECT,
+  properties: {
+    wedge: { type: Type.STRING },
+    competitorInertia: { type: Type.NUMBER, description: "0-100, how hard for incumbent to fix" },
+    startupExploitability: { type: Type.NUMBER, description: "0-100, how exploitable by a small team" },
   },
+  required: ["wedge", "competitorInertia", "startupExploitability"],
 };
 
-async function callTool<T>(
-  client: Anthropic, tool: Anthropic.Tool, prompt: string, parse: (i: unknown) => T,
+async function callModel<T>(
+  client: GoogleGenAI, schema: unknown, prompt: string, parse: (i: unknown) => T,
 ): Promise<T> {
   for (let attempt = 0; attempt < 2; attempt++) {
-    const msg = await client.messages.create({
+    const res = await client.models.generateContent({
       model: MODEL,
-      max_tokens: 4096,
-      tools: [tool],
-      tool_choice: { type: "tool", name: tool.name },
-      messages: [{ role: "user", content: prompt }],
+      contents: prompt,
+      config: { responseMimeType: "application/json", responseSchema: schema },
     });
-    const block = msg.content.find((b) => b.type === "tool_use");
     try {
-      if (block && block.type === "tool_use") return parse(block.input);
-      throw new Error("no tool_use block");
+      return parse(JSON.parse(res.text ?? ""));
     } catch (e) {
       if (attempt === 1) throw e;
     }
@@ -94,7 +82,7 @@ async function callTool<T>(
   throw new Error("unreachable");
 }
 
-export async function extractPains(items: EvidenceItem[], client: Anthropic): Promise<PainPoint[]> {
+export async function extractPains(items: EvidenceItem[], client: GoogleGenAI): Promise<PainPoint[]> {
   const corpus = items
     .map((i, n) => `[${n}] (${i.source}${i.rating ? `, ${i.rating}★` : ""}) ${i.text}`)
     .join("\n");
@@ -103,11 +91,11 @@ export async function extractPains(items: EvidenceItem[], client: Anthropic): Pr
     `label, the source, a short verbatim quote, severity 0-100 (does it block usage / cause data loss?), ` +
     `switchingIntent (do they mention leaving/alternatives?), and willingnessToPaySignal (paid/team/` +
     `productivity stakes?). Only real pains, no filler.\n\nComplaints:\n${corpus}`;
-  return callTool(client, PAIN_TOOL, prompt, parsePainsResponse);
+  return callModel(client, PAIN_SCHEMA, prompt, parsePainsResponse);
 }
 
 export async function judgeOpportunity(
-  pains: PainPoint[], idea: string, competitor: string, client: Anthropic,
+  pains: PainPoint[], idea: string, competitor: string, client: GoogleGenAI,
 ): Promise<JudgeScores> {
   const summary = pains.map((p) => `- ${p.pain} (sev ${p.severity})`).join("\n");
   const prompt =
@@ -115,5 +103,5 @@ export async function judgeOpportunity(
     `pains, name the single best wedge (one phrase), then score competitorInertia (0-100: how hard ` +
     `is this for ${competitor} to fix?) and startupExploitability (0-100: how realistically can a ` +
     `small team exploit it?).\n\nPains:\n${summary}`;
-  return callTool(client, JUDGE_TOOL, prompt, parseJudgeResponse);
+  return callModel(client, JUDGE_SCHEMA, prompt, parseJudgeResponse);
 }
