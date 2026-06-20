@@ -64,5 +64,8 @@ export function assembleOpportunity(pains: PainPoint[], judge: JudgeScores): Opp
     scores,
     confidence,
     decision: decide(confidence),
+    mvpFeatures: judge.mvpFeatures ?? [],
+    avoid: judge.avoid ?? [],
+    alternatives: judge.alternatives ?? [],
   };
 }

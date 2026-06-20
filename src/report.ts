@@ -29,6 +29,9 @@ export type ReportInput = {
 export function renderReport(input: ReportInput): string {
   const { opportunity: o, pains } = input;
   const s = o.scores;
+  const mvpFeatures = o.mvpFeatures ?? [];
+  const avoid = o.avoid ?? [];
+  const alternatives = o.alternatives ?? [];
   const breakdown =
     `Frequency ${s.frequency} · Severity ${s.severity} · Switching ${s.switchingIntent} · ` +
     `WTP ${s.willingnessToPay} · Inertia ${s.competitorInertia} · ` +
@@ -43,18 +46,42 @@ export function renderReport(input: ReportInput): string {
     .map((p) => `- [${sourceLabel(p.source)}] "${p.quote}" — _${p.pain}_`)
     .join("\n") || "_No specific quotes extracted._";
 
+  // A Build that barely clears the bar, or rests on weak pay/switch signals, is a NARROW build.
+  const decisionLabel =
+    o.decision === "Build" && (o.confidence < 78 || s.willingnessToPay < 30 || s.switchingIntent < 45)
+      ? "Build — narrow MVP"
+      : o.decision;
+
+  const mvpBlock = mvpFeatures.length
+    ? mvpFeatures.map((f, i) => `${i + 1}. ${f}`).join("\n") +
+      (avoid.length ? `\n\n**Do not build in v1:** ${avoid.join(", ")}.` : "")
+    : `Build the narrowest product that fixes "${o.wedge}" for ${input.targetUser}.`;
+
   const risks: string[] = [];
   if (input.unavailableSources.length) {
     risks.push(`Source(s) unavailable this run: ${input.unavailableSources.map(sourceLabel).join(", ")} — evidence is thinner than ideal.`);
   }
+  if (s.willingnessToPay < 35) {
+    risks.push(`Willingness-to-pay is weak (${s.willingnessToPay}/100): users complain about the problem, but few explicitly say they would pay for a dedicated alternative.`);
+  }
+  if (s.switchingIntent < 50) {
+    risks.push(`Switching intent is moderate (${s.switchingIntent}/100): complaints describe frustration more than active migration.`);
+  }
+  if (total < 40) {
+    risks.push(`Small sample: ${total} signals — enough for a demo, not a high-confidence market decision.`);
+  }
+  if (alternatives.length) {
+    risks.push(`Crowded space: ${alternatives.join(", ")} already compete here, and ${input.competitor} could narrow the gap over time.`);
+  } else {
+    risks.push(`${input.competitor} could improve on this weakness over time, so the wedge needs a sharper audience than "everyone who dislikes ${input.competitor}".`);
+  }
   if (o.evidenceCount < 8) risks.push("Low evidence volume — treat confidence as provisional.");
-  if (!risks.length) risks.push("Evidence is reasonable but still a sample of vocal users, not the whole market.");
 
   return `# Startup Idea Validation Report — "${input.idea}"
 
 ## Decision
 
-${o.decision}
+${decisionLabel}
 
 ## Confidence Score
 
@@ -80,11 +107,11 @@ ${input.targetUser}
 
 ## Competitor Weakness
 
-Where ${input.competitor} is most exposed: ${o.wedge}.
+Where ${input.competitor} is most exposed: ${o.wedge}.${alternatives.length ? `\n\nExisting alternatives already in this space: ${alternatives.join(", ")}.` : ""}
 
 ## MVP Recommendation
 
-Build the narrowest product that fixes "${o.wedge}" for ${input.targetUser}.
+${mvpBlock}
 
 ## Landing Page Positioning
 
@@ -99,6 +126,6 @@ ${risks.map((r) => `- ${r}`).join("\n")}
 Talk to 5 ${input.targetUser} who left ${input.competitor} and confirm "${o.wedge}" is why.
 
 ---
-Data: analyzed ${total} signals across ${sourcesBreakdown}. Estimated data cost: ~$${input.estimatedCost.toFixed(2)} (pay-per-use, cents-to-low-dollars).
+Data: analyzed ${total} signals across ${sourcesBreakdown}. Estimated data-acquisition cost: ~$${input.estimatedCost.toFixed(2)} (paid scraper data only; excludes LLM, Apify compute, and platform costs).
 `;
 }

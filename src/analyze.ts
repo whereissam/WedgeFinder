@@ -20,12 +20,18 @@ export function parsePainsResponse(input: unknown): PainPoint[] {
   }));
 }
 
+const toStringArray = (v: unknown): string[] =>
+  Array.isArray(v) ? v.map((x) => String(x).trim()).filter(Boolean) : [];
+
 export function parseJudgeResponse(input: unknown): JudgeScores {
   const j = input as any;
   return {
     wedge: String(j?.wedge ?? "Unspecified wedge").trim(),
     competitorInertia: clamp(Number(j?.competitorInertia) || 0, 0, 100),
     startupExploitability: clamp(Number(j?.startupExploitability) || 0, 0, 100),
+    mvpFeatures: toStringArray(j?.mvpFeatures),
+    avoid: toStringArray(j?.avoid),
+    alternatives: toStringArray(j?.alternatives),
   };
 }
 
@@ -58,11 +64,14 @@ const PAIN_SCHEMA = {
 const JUDGE_SCHEMA = {
   type: Type.OBJECT,
   properties: {
-    wedge: { type: Type.STRING },
+    wedge: { type: Type.STRING, description: "Plain-language, founder-readable wedge in under 8 words, no jargon" },
     competitorInertia: { type: Type.NUMBER, description: "0-100, how hard for incumbent to fix" },
     startupExploitability: { type: Type.NUMBER, description: "0-100, how exploitable by a small team" },
+    mvpFeatures: { type: Type.ARRAY, items: { type: Type.STRING }, description: "4-6 concrete features to build in v1" },
+    avoid: { type: Type.ARRAY, items: { type: Type.STRING }, description: "3-4 things NOT to build in v1" },
+    alternatives: { type: Type.ARRAY, items: { type: Type.STRING }, description: "existing competing products the founder would face" },
   },
-  required: ["wedge", "competitorInertia", "startupExploitability"],
+  required: ["wedge", "competitorInertia", "startupExploitability", "mvpFeatures", "avoid", "alternatives"],
 };
 
 async function callModel<T>(
@@ -100,9 +109,13 @@ export async function judgeOpportunity(
 ): Promise<JudgeScores> {
   const summary = pains.map((p) => `- ${p.pain} (sev ${p.severity})`).join("\n");
   const prompt =
-    `A founder wants to build: "${idea}", competing with ${competitor}. Based on these extracted ` +
-    `pains, name the single best wedge (one phrase), then score competitorInertia (0-100: how hard ` +
-    `is this for ${competitor} to fix?) and startupExploitability (0-100: how realistically can a ` +
-    `small team exploit it?).\n\nPains:\n${summary}`;
+    `A founder wants to build: "${idea}", competing with ${competitor}. Based on these extracted pains:\n` +
+    `1. wedge: the single best angle, phrased in plain founder language under 8 words (e.g. "Notes that never disappear offline"), NOT enterprise/technical jargon.\n` +
+    `2. competitorInertia (0-100): how hard is this for ${competitor} to fix?\n` +
+    `3. startupExploitability (0-100): how realistically can a small team exploit it?\n` +
+    `4. mvpFeatures: 4-6 concrete, specific features to ship in v1 (not vague).\n` +
+    `5. avoid: 3-4 things NOT to build in v1 (scope traps).\n` +
+    `6. alternatives: existing products already competing in this space the founder would face.\n\n` +
+    `Pains:\n${summary}`;
   return callModel(client, JUDGE_SCHEMA, prompt, parseJudgeResponse);
 }

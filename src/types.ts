@@ -30,6 +30,9 @@ export type JudgeScores = {
   wedge: string;
   competitorInertia: number;       // 0–100
   startupExploitability: number;   // 0–100
+  mvpFeatures: string[];           // concrete v1 features
+  avoid: string[];                 // what NOT to build in v1
+  alternatives: string[];          // existing competing products in this space
 };
 
 export type Decision = "Build" | "Wait" | "Avoid";
@@ -49,6 +52,9 @@ export type Opportunity = {
   };
   confidence: number;            // 0–100
   decision: Decision;
+  mvpFeatures: string[];
+  avoid: string[];
+  alternatives: string[];
 };
 
 export type SourceResult = {
