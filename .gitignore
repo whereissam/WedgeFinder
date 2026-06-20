@@ -7,3 +7,7 @@ dist/
 build/
 *.actor/
 .apify/
+
+# generated output
+report.md
+report.preview.md
