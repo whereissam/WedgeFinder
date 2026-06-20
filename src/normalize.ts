@@ -22,7 +22,7 @@ export function normalizeRedditItem(raw: any): EvidenceItem {
     source: "reddit",
     text: String(raw.body ?? raw.text ?? raw.title ?? "").trim(),
     url: raw.url ?? raw.link,
-    date: raw.createdAt ?? raw.date,
+    date: raw.createdAt ?? raw.created_utc ?? raw.date,
     author: raw.username ?? raw.author,
   };
 }
@@ -32,7 +32,7 @@ export function normalizeThreads(raw: any): EvidenceItem {
     source: "threads",
     text: String(raw.text ?? raw.caption ?? raw.body ?? "").trim(),
     url: raw.url ?? raw.link,
-    date: raw.publishedAt ?? raw.date,
+    date: raw.publishedAt ?? raw.created_at ?? raw.date,
     author: raw.username ?? raw.author,
   };
 }

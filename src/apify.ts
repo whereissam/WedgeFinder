@@ -7,7 +7,6 @@ import type { SourceResult, EvidenceItem, Source } from "./types.ts";
 // stall the whole run — it times out fast and we degrade to the other sources.
 const TIMEOUT_REVIEWS = 180;
 const TIMEOUT_SOCIAL = 75;
-const RESIDENTIAL = { useApifyProxy: true, apifyProxyGroups: ["RESIDENTIAL"] };
 
 export function makeApifyClient(): ApifyClient {
   return new ApifyClient({ token: process.env.APIFY_TOKEN });
@@ -50,12 +49,12 @@ export type SocialCfg = { actorId: string; competitor: string; maxItems: number 
 
 export async function runRedditScraper(cfg: SocialCfg, client: ApifyClient): Promise<SourceResult> {
   try {
-    const searches = ["slow", "offline", "alternative", "bug"].map((w) => `${cfg.competitor} ${w}`);
+    const queries = ["slow", "offline", "alternative", "bug"].map((w) => `${cfg.competitor} ${w}`);
+    // fatihtahta/reddit-scraper-search-fast: API-based (no 403s like the browser lite actor),
+    // pay-per-event. Input is `queries` + `maxPosts`; no proxy needed.
     const run = await client.actor(cfg.actorId).call(
       {
-        searches, searchPosts: true, searchComments: true, sort: "relevance", maxItems: cfg.maxItems,
-        maxRequestRetries: 2, // don't grind through endless retries when Reddit blocks
-        proxy: RESIDENTIAL, // full trudax/reddit-scraper reads `proxy`; residential dodges most 403s
+        queries, sort: "relevance", maxPosts: cfg.maxItems, scrapeComments: true, maxComments: 20,
       },
       { timeout: TIMEOUT_SOCIAL },
     );
@@ -69,11 +68,12 @@ export async function runRedditScraper(cfg: SocialCfg, client: ApifyClient): Pro
 
 export async function runThreadsScraper(cfg: SocialCfg, client: ApifyClient): Promise<SourceResult> {
   try {
+    const keywords = [`${cfg.competitor} slow`, `${cfg.competitor} offline`, `${cfg.competitor} alternative`];
+    // watcher.data/search-threads-by-keywords: API-based, pay-per-event.
+    // Input is `keywords` + `maxItemsPerKeyword`; no proxy needed.
     const run = await client.actor(cfg.actorId).call(
       {
-        queries: [`${cfg.competitor} slow`, `${cfg.competitor} offline`, `${cfg.competitor} alternative`],
-        maxItems: cfg.maxItems, maxRequestRetries: 2,
-        proxy: RESIDENTIAL, proxyConfiguration: RESIDENTIAL,
+        keywords, maxItemsPerKeyword: Math.ceil(cfg.maxItems / keywords.length), sortByRecent: true, outputFormat: "json",
       },
       { timeout: TIMEOUT_SOCIAL },
     );

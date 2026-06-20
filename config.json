@@ -10,9 +10,9 @@
   "maxThreadsItems": 30,
   "actors": {
     "reviews": "andok/app-store-reviews",
-    "reddit": "trudax/reddit-scraper",
-    "threads": "apify/threads-scraper"
+    "reddit": "fatihtahta/reddit-scraper-search-fast",
+    "threads": "watcher.data/search-threads-by-keywords"
   },
   "country": "us",
-  "appStore": { "ios": "", "android": "notion.id" }
+  "appStore": { "ios": "1232780281", "android": "notion.id" }
 }
