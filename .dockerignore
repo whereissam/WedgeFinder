@@ -1,0 +1,11 @@
+.git
+node_modules
+.env
+.env.local
+.superpowers
+docs
+workshop
+report.md
+report.preview.md
+*.log
+.DS_Store

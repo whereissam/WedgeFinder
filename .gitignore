@@ -11,3 +11,6 @@ build/
 # generated output
 report.md
 report.preview.md
+
+# apify local storage
+storage/
