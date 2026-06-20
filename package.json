@@ -1,0 +1,15 @@
+{
+  "name": "wedgefinder",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --experimental-strip-types --test",
+    "start": "node --experimental-strip-types --env-file=.env src/main.ts",
+    "start:mock": "node --experimental-strip-types --env-file=.env src/main.ts --mock"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
+    "apify-client": "^2.11.0"
+  }
+}
